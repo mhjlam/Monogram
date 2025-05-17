@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36109.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monogram", "Monogram\Monogram.csproj", "{36985E9B-7652-4087-B52D-21B1CFF4699F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{36985E9B-7652-4087-B52D-21B1CFF4699F}.Debug|x64.ActiveCfg = Debug|x64
+		{36985E9B-7652-4087-B52D-21B1CFF4699F}.Debug|x64.Build.0 = Debug|x64
+		{36985E9B-7652-4087-B52D-21B1CFF4699F}.Release|x64.ActiveCfg = Release|x64
+		{36985E9B-7652-4087-B52D-21B1CFF4699F}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D06F4565-B67E-4753-8DA0-C4238BC6B56D}
+	EndGlobalSection
+EndGlobal

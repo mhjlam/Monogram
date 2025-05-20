@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Monogram.Source.Scenes;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -70,20 +71,6 @@ public class Renderer
 		scene.Shader.Effect.Parameters["CameraPosition"]?.SetValue(camera.Position);
 
 		scene.Update(deltaTime);
-
-		if (scene.Shader.Effect.Parameters["ProjectorViewProjection"] != null)
-		{
-			Vector3 projectorPosition = scene.Shader.Effect.Parameters["ProjectorPosition"] != null
-				? scene.Shader.Effect.Parameters["ProjectorPosition"].GetValueVector3()
-				: new Vector3(0f, 20f, 30f);
-
-			Matrix projectorViewProjection =
-				Matrix.Identity * SceneModels.First().TransformationMatrix *
-				Matrix.CreateLookAt(projectorPosition, new Vector3(0f, 10f, 0f), Vector3.Up) *
-				Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(20f), 1f, 1f, 100f);
-
-			scene.Shader.Effect.Parameters["ProjectorViewProjection"].SetValue(projectorViewProjection);
-		}
 	}
 
 	public void Draw()

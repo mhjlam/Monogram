@@ -111,7 +111,7 @@ public class MultiLightShader : Shader
 
 public class ProjectionShader : Shader
 {
-	public Vector3 ProjectorPosition = new(0.0f, 20.0f, 30.0f);
+	public Vector3 ProjectorPosition = new(0.0f, 0.0f, 40.0f);
 
 	public ProjectionShader(Effect effect, LambertianMaterial material, Texture2D texture) : base(effect)
 	{

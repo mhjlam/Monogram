@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 
-namespace Monogram;
+namespace Monogram.Source.Scenes;
 
 public enum SceneID
 {
@@ -11,7 +11,7 @@ public enum SceneID
 	Phong,
 	Normals,
 	Checkered,
-	Wood,
+	Texture,
 	CookTorrance,
 	Spotlight,
 	Multilight,
@@ -40,7 +40,7 @@ public class Scene(SceneID id, Shader shader, List<Model> models, Vector3? eye =
 			SceneID.Phong => "Blinn-Phong Shader",
 			SceneID.Normals => "Normals",
 			SceneID.Checkered => "Procedural Checkers",
-			SceneID.Wood => "Wood Texture",
+			SceneID.Texture => "Texture",
 			SceneID.CookTorrance => "Cook-Torrance BRDF",
 			SceneID.Spotlight => "Spotlight",
 			SceneID.Multilight => "Multi-Light",

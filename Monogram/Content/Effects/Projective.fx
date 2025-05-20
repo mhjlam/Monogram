@@ -1,4 +1,4 @@
-float4x4 WVP;
+﻿float4x4 WVP;
 float3x3 WorldIT;
 
 // these matrices are used to render the texture from the projector's POV
@@ -14,6 +14,7 @@ float3 ProjectorPosition : POSITION;
 float3 DiffuseColor	: COLOR0;
 float3 AmbientColor	: COLOR1;
 
+float Time;
 float AmbientIntensity;
 
 
@@ -41,25 +42,48 @@ VSOUT VS(VSIN input) {
 	return output;
 }
 
+float3 hsv2rgb(float h, float s, float v)
+{
+    float3 rgb = float3(0.0, 0.0, 0.0);
+
+    float c = v * s;
+    float h_ = h * 6.0;
+    float x = c * (1.0 - abs(fmod(h_, 2.0) - 1.0));
+		 if (0.0 <= h_ && h_ < 1.0) rgb = float3(c, x, 0.0);
+    else if (1.0 <= h_ && h_ < 2.0) rgb = float3(x, c, 0.0);
+    else if (2.0 <= h_ && h_ < 3.0) rgb = float3(0.0, c, x);
+    else if (3.0 <= h_ && h_ < 4.0) rgb = float3(0.0, x, c);
+    else if (4.0 <= h_ && h_ < 5.0) rgb = float3(x, 0.0, c);
+    else if (5.0 <= h_ && h_ < 6.0) rgb = float3(c, 0.0, x);
+
+    float m = v - c;
+    return rgb + m;
+}
+
 float4 PS(VSOUT input) : COLOR {
 	float4 output;
 
 	// the +1.0 will become +0.5 after the multiplication with 0.5
-	float UVx = 0.5f * ((input.PPos.x / input.PPos.w) + 1.0);
-	float UVy = 0.5f * ((-input.PPos.y / input.PPos.w) + 1.0);
-	// note that these operations could've been performed by a matrix as well
+	float u = 0.5f * ((input.PPos.x / input.PPos.w) + 1.0);
+	float v = 0.5f * ((-input.PPos.y / input.PPos.w) + 1.0);
 	
-	float diffuseLight = saturate(dot(input.Normal, normalize(ProjectorPosition)));
+	float diffuseIntensity = saturate(dot(input.Normal, normalize(ProjectorPosition)));
 	float3 ambient = AmbientColor * AmbientIntensity;
-	float3 diffuse = diffuseLight * DiffuseColor;
+    float3 diffuse = DiffuseColor * diffuseIntensity;
 	
 	// manually prevent texture from wrapping
 	float3 texel = float3(0.0f, 0.0f, 0.0f);
 
 	// only use texel if uv coordinates are in range of the projection
-	if (UVx >= 0.0f && UVx <= 1.0f && UVy >= 0.0f && UVy <= 1.0f) {
-		texel = tex2D(ProjectorSampler, float2(UVx, UVy)).rgb * diffuseLight;
-	}
+    if (u >= 0.0f && u <= 1.0f && v >= 0.0f && v <= 1.0f) {
+        float3 sample = tex2D(ProjectorSampler, float2(u, v)).rgb;
+		
+        // Cycle hue from 0 to 1 over time for a full RGB spectrum
+        float hue = fmod(Time * 0.15, 1.0); // 0.15 controls speed
+        float3 rainbow = hsv2rgb(hue, 1.0, 1.0);
+		
+        texel = sample * rainbow * diffuseIntensity;
+    }
 
 	output.rgb = saturate(ambient + diffuse + texel);
 	output.a = 1.0f;

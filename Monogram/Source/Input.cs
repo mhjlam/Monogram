@@ -35,18 +35,8 @@ public class Input
         if (_newKeyState.IsKeyDown(Keys.Escape))
             Environment.Exit(0);
 
-        if (_sceneManager.SceneID != SceneID.Culling)
-        {
-            if (_newKeyState.IsKeyDown(Keys.A)) _sceneManager.SceneModels.ForEach(m => m.RotateY(0.05f * delta));
-            if (_newKeyState.IsKeyDown(Keys.D)) _sceneManager.SceneModels.ForEach(m => m.RotateY(-0.05f * delta));
-        }
-        else
-        {
-            if (_newKeyState.IsKeyDown(Keys.A)) _sceneManager.SceneModels.ForEach(m => m.Translate(Vector3.Left * delta));
-            if (_newKeyState.IsKeyDown(Keys.D)) _sceneManager.SceneModels.ForEach(m => m.Translate(Vector3.Right * delta));
-            if (_newKeyState.IsKeyDown(Keys.W)) _sceneManager.SceneModels.ForEach(m => m.Translate(Vector3.Up * delta));
-            if (_newKeyState.IsKeyDown(Keys.S)) _sceneManager.SceneModels.ForEach(m => m.Translate(Vector3.Down * delta));
-        }
+        if (_newKeyState.IsKeyDown(Keys.A)) _sceneManager.SceneModels.ForEach(m => m.RotateY(delta));
+        if (_newKeyState.IsKeyDown(Keys.D)) _sceneManager.SceneModels.ForEach(m => m.RotateY(-delta));
 
         if (_newKeyState.IsKeyDown(Keys.R) && _oldKeyState.IsKeyUp(Keys.R))
         {

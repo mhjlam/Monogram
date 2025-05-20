@@ -14,10 +14,10 @@ public class Input
     private Point _preLockMousePosition;
     private readonly Point _windowCenter;
     private readonly GameWindow _window;
-    private readonly Scener _sceneManager;
+    private readonly Renderer _sceneManager;
     private float _modelRotation = 0f;
 
-    public Input(GameWindow window, Scener sceneManager)
+    public Input(GameWindow window, Renderer sceneManager)
     {
         _window = window;
         _sceneManager = sceneManager;
@@ -103,7 +103,7 @@ public class Input
             }
             else
             {
-                const float modelScrollSensitivity = 0.005f;
+                const float modelScrollSensitivity = 0.5f;
                 _modelRotation += scrollDelta * modelScrollSensitivity;
             }
         }

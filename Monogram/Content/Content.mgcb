@@ -145,7 +145,7 @@
 /processorParam:TextureFormat=Compressed
 /build:Models/FemaleHead.fbx
 
-#begin Models/TableTop.fbx
+#begin Models/Square.fbx
 /importer:FbxImporter
 /processor:ModelProcessor
 /processorParam:ColorKeyColor=0,0,0,0
@@ -162,7 +162,7 @@
 /processorParam:Scale=1
 /processorParam:SwapWindingOrder=False
 /processorParam:TextureFormat=Compressed
-/build:Models/TableTop.fbx
+/build:Models/Square.fbx
 
 #begin Models/Teapot.fbx
 /importer:FbxImporter

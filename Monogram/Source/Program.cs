@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Monogram.Scenes;
 using System.Collections.Generic;
 
 namespace Monogram;
@@ -28,7 +29,7 @@ public sealed class Program : Game
 {
 	private readonly GraphicsDeviceManager _graphicsDeviceManager;
 	private GraphicsDevice _graphicsDevice = default!;
-	private Scener _sceneManager = default!;
+	private Renderer _sceneManager = default!;
 	private readonly FrameRateCounter _frameRateCounter;
 
 	private Input _input = default!;
@@ -74,25 +75,19 @@ public sealed class Program : Game
 		var spriteFont = _spriteFont;
 		var spriteBatch = _spriteBatch;
 
-		_sceneManager = new Scener(_graphicsDevice, spriteBatch, spriteFont);
+		_sceneManager = new Renderer(_graphicsDevice, spriteBatch, spriteFont);
 
 		// Models
 		var headModel = new Model(Content.Load<Microsoft.Xna.Framework.Graphics.Model>("Models/FemaleHead"));
 		var terrainModel = new Model(_graphicsDevice, Content.Load<Texture2D>("Textures/HeightMap"), Vector3.Zero, Vector3.Zero, 0.5f);
 		var teapotModel = new Model(Content.Load<Microsoft.Xna.Framework.Graphics.Model>("Models/Teapot"), Vector3.Zero, Vector3.Zero, 10f);
-		var squareModel = new Model(Content.Load<Microsoft.Xna.Framework.Graphics.Model>("Models/TableTop"), Vector3.Zero, Vector3.Zero, 20f);
+		var squareModel = new Model(Content.Load<Microsoft.Xna.Framework.Graphics.Model>("Models/Square"), Vector3.Zero, Vector3.Zero, 20f);
 
-		var headgeRow = new List<Model>
-		{
-			new(headModel, new Vector3(-80f + 0 * 40f, 0f, 0f)),
-			new(headModel, new Vector3(-80f + 1 * 40f, 0f, 0f)),
-			new(headModel, new Vector3(-80f + 2 * 40f, 0f, 0f)),
-			new(headModel, new Vector3(-80f + 3 * 40f, 0f, 0f)),
-			new(headModel, new Vector3(-80f + 4 * 40f, 0f, 0f)),
-			new(headModel, new Vector3(-80f + 5 * 40f, 0f, 0f)),
-			new(headModel, new Vector3(-80f + 6 * 40f, 0f, 0f)),
-			new(headModel, new Vector3(-80f + 7 * 40f, 0f, 0f))
-		};
+		const int count = 9;
+		const float totalWidth = 160f, spacing = totalWidth / (count - 1), startX = -totalWidth / 2f, scale = 0.5f;
+		var headgeRow = new List<Model>(count);
+		for (int i = 0; i < count; i++)
+			headgeRow.Add(new Model(headModel, new Vector3(startX + i * spacing, 0f, 0f), null, scale));
 
 		// Materials
 		var lambertianMaterial = new LambertianMaterial
@@ -131,10 +126,12 @@ public sealed class Program : Game
 			ReflectanceCoefficient = 1.42f
 		};
 
-		var basicEffect = new BasicEffect(_graphicsDevice);
-		basicEffect.VertexColorEnabled = true;
-		basicEffect.LightingEnabled = true;
-		basicEffect.AmbientLightColor = new Vector3(0.3f);
+		var basicEffect = new BasicEffect(_graphicsDevice)
+		{
+			VertexColorEnabled = true,
+			LightingEnabled = true,
+			AmbientLightColor = new Vector3(0.3f)
+		};
 		basicEffect.DirectionalLight0.Enabled = true;
 		basicEffect.DirectionalLight0.DiffuseColor = Color.White.ToVector3();
 		basicEffect.DirectionalLight0.Direction = Vector3.Down;
@@ -150,25 +147,25 @@ public sealed class Program : Game
 		var projection		= new ProjectionShader(Content.Load<Effect>("Effects/Projective"), lambertianMaterial, Content.Load<Texture2D>("Textures/Smiley"));
 		var cookTorrance	= new CookTorranceShader(Content.Load<Effect>("Effects/CookTorrance"), cookTorranceMaterial);
 
-		var monocFilter		= new Filter(_graphicsDevice, spriteBatch, Content.Load<Effect>("Effects/Monochrome"));
+		var monoFilter		= new Filter(_graphicsDevice, spriteBatch, Content.Load<Effect>("Effects/Monochrome"));
 		var gaussianFilter	= new GaussianBlur(_graphicsDevice, spriteBatch, Content.Load<Effect>("Effects/GaussianBlur"));
 
 		// Lambda that accepts a radians value and outputs a Vector3
 		static Vector3 eyeTransform(float radians) => Vector3.Transform(new Vector3(0f, 0f, 100f), Matrix.CreateRotationX(MathHelper.ToRadians(radians)));
 
-		_sceneManager.AddScene(SceneID.Terrain,			basicShader,	[terrainModel],	eyeTransform(-40f));
-		_sceneManager.AddScene(SceneID.Wood,			woodTexture,	[squareModel],	eyeTransform(+20f));
-		_sceneManager.AddScene(SceneID.Lambert,			lambertian,		[teapotModel],	eyeTransform(-20f));
-		_sceneManager.AddScene(SceneID.Phong,			blinnPhong,		[teapotModel],	eyeTransform(-20f));
-		_sceneManager.AddScene(SceneID.Normals,			normalColor,	[teapotModel],	eyeTransform(-20f));
-		_sceneManager.AddScene(SceneID.Checkered,		checkered,		[teapotModel],	eyeTransform(-20f));
-		_sceneManager.AddScene(SceneID.CookTorrance,	cookTorrance,	[headModel]);
-		_sceneManager.AddScene(SceneID.Spotlight,		spotlight,		[headModel]);
-		_sceneManager.AddScene(SceneID.Multilight,		multilight,		[headModel]);
-		_sceneManager.AddScene(SceneID.Projection,		projection,		[headModel]);
-		_sceneManager.AddScene(SceneID.Monochrome,		cookTorrance,	[headModel], null, monocFilter);
-		_sceneManager.AddScene(SceneID.GaussianBlur,	normalColor,	[headModel], null, gaussianFilter);
-		_sceneManager.AddScene(SceneID.Culling,			normalColor,	headgeRow);
+		_sceneManager.AddScene(new Scene(SceneID.Terrain, basicShader, [terrainModel], eyeTransform(-40f)));
+		_sceneManager.AddScene(new Scene(SceneID.Wood, woodTexture, [squareModel], eyeTransform(+20f)));
+		_sceneManager.AddScene(new Scene(SceneID.Lambert, lambertian, [teapotModel], eyeTransform(-20f)));
+		_sceneManager.AddScene(new Scene(SceneID.Phong, blinnPhong, [teapotModel], eyeTransform(-20f)));
+		_sceneManager.AddScene(new Scene(SceneID.Normals, normalColor, [teapotModel], eyeTransform(-20f)));
+		_sceneManager.AddScene(new Scene(SceneID.Checkered, checkered, [teapotModel], eyeTransform(-20f)));
+		_sceneManager.AddScene(new Scene(SceneID.CookTorrance, cookTorrance, [headModel]));
+		_sceneManager.AddScene(new Scene(SceneID.Spotlight, spotlight, [headModel]));
+		_sceneManager.AddScene(new Scene(SceneID.Multilight, multilight, [headModel]));
+		_sceneManager.AddScene(new Scene(SceneID.Projection, projection, [headModel]));
+		_sceneManager.AddScene(new Scene(SceneID.Monochrome, cookTorrance, [headModel], null, monoFilter));
+		_sceneManager.AddScene(new Scene(SceneID.GaussianBlur, normalColor, [headModel], null, gaussianFilter));
+		_sceneManager.AddScene(new CullingScene(normalColor, headgeRow, totalWidth));
 
 		// Initialize camera orbit state
 		_sceneManager.Camera.SyncOrbitToCamera();
@@ -178,9 +175,8 @@ public sealed class Program : Game
 
 	protected override void Update(GameTime gameTime)
 	{
-		float delta = (float)gameTime.ElapsedGameTime.TotalSeconds * 60f;
-
-		_sceneManager.Update();
+		float delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
+		_sceneManager.Update(delta);
 
 		bool isMouseVisible = IsMouseVisible;
 		_input.Update(delta, ref isMouseVisible, _sceneManager.Camera.SyncOrbitToCamera);

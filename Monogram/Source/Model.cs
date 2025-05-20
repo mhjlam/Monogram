@@ -4,20 +4,12 @@ using XnaModel = Microsoft.Xna.Framework.Graphics.Model;
 
 namespace Monogram;
 
-public struct VertexPositionNormalColor : IVertexType
+public struct VertexPositionNormalColor(Vector3 position, Color color, Vector3 normal) : IVertexType
 {
-    public Vector3 Position;
-    public Vector3 Normal;
-    public Color Color;
-
-    public VertexPositionNormalColor(Vector3 position, Color color, Vector3 normal)
-    {
-        Position = position;
-        Color = color;
-        Normal = normal;
-    }
-
-    public static readonly VertexElement[] VertexElements =
+    public Vector3 Position = position;
+    public Vector3 Normal = normal;
+    public Color Color = color;
+	public static readonly VertexElement[] VertexElements =
     [
         new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
         new VertexElement(sizeof(float) * 3, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
@@ -208,7 +200,7 @@ public class Model
         indexBuffer.SetData(indices);
     }
 
-    public void Draw(SceneDefinition scene, Camera camera)
+    public void Draw(Scene scene, Camera camera)
     {
         Matrix world = Matrix.Identity * TransformationMatrix;
         Matrix view = camera.ViewMatrix;

@@ -1,65 +1,18 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace Monogram;
 
-public enum SceneID
-{
-	Terrain,
-	Lambert,
-	Phong,
-	Normals,
-	Checkered,
-	Wood,
-	CookTorrance,
-	Spotlight,
-	Multilight,
-	Culling,
-	Projection,
-	Monochrome,
-	GaussianBlur
-}
-
-public struct SceneDefinition
-{
-	public SceneID Id;
-	public Vector3 Eye;
-	public List<Model> Models;
-	public Shader Shader;
-	public Filter? PostProcess;
-
-	public readonly string SceneTitle =>
-		Id switch
-		{
-			SceneID.Terrain => "Height Map Terrain",
-			SceneID.Lambert => "Lambertian Shader",
-			SceneID.Phong => "Blinn-Phong Shader",
-			SceneID.Normals => "Normals",
-			SceneID.Checkered => "Procedural Checkers",
-			SceneID.Wood => "Wood Texture",
-			SceneID.CookTorrance => "Cook-Torrance BRDF",
-			SceneID.Spotlight => "Spotlight",
-			SceneID.Multilight => "Multi-Light",
-			SceneID.Culling => "Frustum Culling",
-			SceneID.Projection => "Projective Texture",
-			SceneID.Monochrome => "Monochrome Filter",
-			SceneID.GaussianBlur => "Gaussian Blur Filter",
-			_ => Id.ToString()
-		};
-}
-
-public class Scener
+public class Renderer
 {
 	private readonly SpriteFont font;
 	private readonly SpriteBatch batch;
 	private readonly GraphicsDevice device;
 
-	private SceneDefinition scene;
-	private readonly List<SceneDefinition> scenes;
+	private Scene scene = null!; // Initialize with null-forgiving operator to satisfy the compiler.
+	private readonly List<Scene> scenes;
 
 	private readonly Camera camera;
 	private readonly RenderTarget2D capture;
@@ -69,7 +22,7 @@ public class Scener
 	public Camera Camera => camera;
 	public List<Model> SceneModels => scene.Models;
 
-	public Scener(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont spriteFont)
+	public Renderer(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont spriteFont)
 	{
 		device = graphicsDevice;
 		batch = spriteBatch;
@@ -82,18 +35,11 @@ public class Scener
 		frustum = new BoundingFrustum(camera.ViewMatrix * camera.ProjectionMatrix);
 	}
 
-	public void AddScene(SceneID id, Shader shader, List<Model> models, Vector3? eye = null, Filter? postProcess = null)
+	public void AddScene(Scene scene)
 	{
-		scenes.Add(new SceneDefinition
-		{
-			Id = id,
-			Models = models,
-			Shader = shader,
-			Eye = eye ?? new Vector3(0f, 0f, 100f),
-			PostProcess = postProcess
-		});
-
-		if (scenes.Count == 1) LoadScene(0);
+		scenes.Add(scene);
+		if (scenes.Count == 1)
+			LoadScene(0);
 	}
 
 	public void LoadScene(int index)
@@ -109,18 +55,21 @@ public class Scener
 	public void LoadAdjacent(bool prev = false)
 	{
 		if (scenes.Count < 2) return;
-		int index = scenes.FindIndex(s => s.Equals(scene));
+
+		int index = scenes.FindIndex(s => s == scene);
 		int newIndex = prev
 			? (index - 1 < 0 ? scenes.Count - 1 : index - 1)
 			: (index + 1 >= scenes.Count ? 0 : index + 1);
 		LoadScene(newIndex);
 	}
 
-	public void Update()
+	public void Update(float deltaTime)
 	{
 		camera.Update();
 		frustum.Matrix = camera.ViewMatrix * camera.ProjectionMatrix;
 		scene.Shader.Effect.Parameters["CameraPosition"]?.SetValue(camera.Position);
+
+		scene.Update(deltaTime);
 
 		if (scene.Shader.Effect.Parameters["ProjectorViewProjection"] != null)
 		{
@@ -141,37 +90,14 @@ public class Scener
 	{
 		if (scenes.Count == 0 || scene.Models.Count == 0) return;
 
-		if (scene.PostProcess != null)
-			device.SetRenderTarget(capture);
-
 		device.Clear(Color.Black);
 
-		foreach (var model in scene.Models)
-		{
-			if (model.XnaModel != null)
-			{
-				BoundingSphere boundingSphere = new();
-				foreach (ModelMesh mesh in model.XnaModel.Meshes)
-					boundingSphere = BoundingSphere.CreateMerged(boundingSphere, mesh.BoundingSphere);
+		// Scene-specific 3D rendering (including postprocess if needed)
+		scene.Draw(device, frustum, camera, capture);
 
-				boundingSphere.Center = model.Position;
-				if (frustum.Intersects(boundingSphere))
-					model.Draw(scene, camera);
-			}
-			else
-			{
-				model.Draw(scene, camera);
-			}
-		}
-
-		if (scene.PostProcess != null)
-		{
-			device.SetRenderTarget(null);
-			scene.PostProcess.Draw(capture);
-		}
-
+		// Overlay (scene info, stats, etc)
 		batch.Begin();
-		batch.DrawString(font, scene.SceneTitle, new Vector2(20f, 20f), Color.White);
+		scene.DrawOverlay(batch, font);
 		batch.End();
 
 		device.BlendState = BlendState.Opaque;

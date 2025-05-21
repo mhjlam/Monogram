@@ -1,43 +1,32 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using Monogram.Scenes;
 using Monogram.Source.Scenes;
-using System.Collections.Generic;
-
+using System.Linq;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 using XnaModel = Microsoft.Xna.Framework.Graphics.Model;
 
 namespace Monogram;
-
-public sealed class FrameRateCounter(Game game) : DrawableGameComponent(game)
-{
-	private int _frameRate;
-	private int _frameCounter;
-	private int _secondsPassed;
-
-	public int FrameRate => _frameRate;
-
-	public override void Update(GameTime gameTime)
-	{
-		if (_secondsPassed != gameTime.TotalGameTime.Seconds)
-		{
-			_frameRate = _frameCounter;
-			_secondsPassed = gameTime.TotalGameTime.Seconds;
-			_frameCounter = 0;
-		}
-		_frameCounter++;
-	}
-}
 
 public sealed class Program : Game
 {
 	private readonly GraphicsDeviceManager _graphicsDeviceManager;
 	private GraphicsDevice _graphicsDevice = default!;
-	private Renderer _sceneManager = default!;
-	private readonly FrameRateCounter _frameRateCounter;
+	private Renderer _renderer = default!;
 
 	private Input _input = default!;
 	private SpriteFont _spriteFont = default!;
 	private SpriteBatch _spriteBatch = default!;
+
+	private MouseState _prevMouseState;
+
+	// Add Overlay field
+	private Overlay _overlay = default!;
+
+	// Add these fields to Program
+	private bool _dropdownExpandedLast = false;
+
 
 	public Program()
 	{
@@ -52,9 +41,6 @@ public sealed class Program : Game
 			SynchronizeWithVerticalRetrace = false
 		};
 		_graphicsDeviceManager.ApplyChanges();
-
-		_frameRateCounter = new(this);
-		Components.Add(_frameRateCounter);
 	}
 
 	protected override void Initialize()
@@ -74,23 +60,20 @@ public sealed class Program : Game
 		_graphicsDevice.RasterizerState = new RasterizerState();
 
 		_spriteBatch = new SpriteBatch(_graphicsDevice);
-		_spriteFont = Content.Load<SpriteFont>("Fonts/Segoe12");
-		var spriteFont = _spriteFont;
-		var spriteBatch = _spriteBatch;
+		_spriteFont = Content.Load<SpriteFont>("Fonts/Consolas12");
 
-		_sceneManager = new Renderer(_graphicsDevice, spriteBatch, spriteFont);
+		_renderer = new Renderer(_graphicsDevice, _spriteBatch, _spriteFont);
 
 		// Models
 		var head = new Model(Content.Load<XnaModel>("Models/FemaleHead"));
-		var cube = new Model(Content.Load<XnaModel>("Models/UnitCube"), Vector3.Zero, Vector3.Zero, 40f);
-		var teapot = new Model(Content.Load<XnaModel>("Models/Teapot"), Vector3.Zero, Vector3.Zero, 10f);
-		var terrain = new Model(_graphicsDevice, Content.Load<Texture2D>("Textures/HeightMap"), Vector3.Zero, Vector3.Zero, 0.5f);
+		var cube = new Model(Content.Load<XnaModel>("Models/UnitCube"), Vector3.Zero, Vector3.Zero, new Vector3(40f, 40f, 40f));
+		var teapot = new Model(Content.Load<XnaModel>("Models/Teapot"), Vector3.Zero, Vector3.Zero, new Vector3(10f, 10f, 10f));
 
 		const int count = 9;
 		const float totalWidth = 160f, spacing = totalWidth / (count - 1), startX = -totalWidth / 2f, scale = 0.5f;
-		var headgeRow = new List<Model>(count);
-		for (int i = 0; i < count; i++)
-			headgeRow.Add(new Model(head, new Vector3(startX + i * spacing, 0f, 0f), null, scale));
+		var headgeRow = Enumerable.Range(0, count)
+			.Select(i => new Model(head.XnaModel!, new Vector3(startX + i * spacing, 0f, 0f), Vector3.Zero, new Vector3(scale)))
+			.ToList();
 
 		// Materials
 		var lambertianMaterial = new LambertianMaterial
@@ -139,73 +122,109 @@ public sealed class Program : Game
 		basicEffect.DirectionalLight0.DiffuseColor = Color.White.ToVector3();
 		basicEffect.DirectionalLight0.Direction = Vector3.Down;
 
-		var basicShader		= new Shader(basicEffect);
-		var woodTexture		= new WoodShader(Content.Load<Effect>("Effects/Texture"), woodMaterial, _sceneManager.Camera, Content.Load<Texture2D>("Textures/Planks"));
-		var blinnPhong		= new PhongShader(Content.Load<Effect>("Effects/BlinnPhong"), phongMaterial, _sceneManager.Camera);
-		var normalColor		= new Shader(Content.Load<Effect>("Effects/Normals"));
-		var checkered		= new Shader(Content.Load<Effect>("Effects/Checkers"));
-		var spotlight		= new SpotLightShader(Content.Load<Effect>("Effects/Spotlight"), phongMaterial);
-		var lambertian		= new LambertianShader(Content.Load<Effect>("Effects/Lambertian"), lambertianMaterial);
-		var multilight		= new MultiLightShader(Content.Load<Effect>("Effects/MultiLight"), cookTorranceMaterial);
-		var projection		= new ProjectionShader(Content.Load<Effect>("Effects/Projective"), lambertianMaterial, Content.Load<Texture2D>("Textures/Tattoo"));
-		var cookTorrance	= new CookTorranceShader(Content.Load<Effect>("Effects/CookTorrance"), cookTorranceMaterial);
+		static Vector3 eyeTransform(float dist, float radX, float? radY = null, float? radZ = null)
+		{
+			float y = radY ?? 0f;
+			float z = radZ ?? 0f;
+			return Vector3.Transform(
+				new Vector3(0f, 0f, dist),
+				Matrix.CreateRotationX(MathHelper.ToRadians(radX)) *
+				Matrix.CreateRotationY(MathHelper.ToRadians(y)) *
+				Matrix.CreateRotationZ(MathHelper.ToRadians(z))
+			);
+		}
 
-		var monoFilter		= new Filter(_graphicsDevice, spriteBatch, Content.Load<Effect>("Effects/Monochrome"));
-		var gaussianFilter	= new GaussianBlur(_graphicsDevice, spriteBatch, Content.Load<Effect>("Effects/GaussianBlur"));
+		var woodTexture = new WoodShader(Content.Load<Effect>("Effects/Texture"), woodMaterial, _renderer.Camera, Content.Load<Texture2D>("Textures/Planks"));
+		var blinnPhong = new PhongShader(Content.Load<Effect>("Effects/BlinnPhong"), phongMaterial, _renderer.Camera);
+		var normalColor = new Shader(Content.Load<Effect>("Effects/Normals"));
+		var checkered = new Shader(Content.Load<Effect>("Effects/Checkers"));
+		var spotlight = new SpotLightShader(Content.Load<Effect>("Effects/Spotlight"), phongMaterial);
+		var lambertian = new LambertianShader(Content.Load<Effect>("Effects/Lambertian"), lambertianMaterial);
+		var multilight = new MultiLightShader(Content.Load<Effect>("Effects/MultiLight"), cookTorranceMaterial);
+		var projective = new ProjectionShader(Content.Load<Effect>("Effects/Projective"), lambertianMaterial, Content.Load<Texture2D>("Textures/Tattoo"));
+		var cookTorrance = new CookTorranceShader(Content.Load<Effect>("Effects/CookTorrance"), cookTorranceMaterial);
 
-		// Lambda that accepts a radians value and outputs a Vector3
-		static Vector3 eyeTransform(float radians) => Vector3.Transform(new Vector3(0f, 0f, 100f), Matrix.CreateRotationX(MathHelper.ToRadians(radians)));
-		static Vector3 eyeTransform2(float radX, float radY) => Vector3.Transform(new Vector3(0f, 0f, 100f), Matrix.CreateRotationX(MathHelper.ToRadians(radX)) * Matrix.CreateRotationY(MathHelper.ToRadians(radY)));
+		var monochrome = new Filter(_graphicsDevice, _spriteBatch, Content.Load<Effect>("Effects/Monochrome"));
+		var gaussianBlur = new GaussianBlur(_graphicsDevice, _spriteBatch, Content.Load<Effect>("Effects/GaussianBlur"));
 
-		_sceneManager.AddScene(new Scene(SceneID.Terrain, basicShader, [terrain], eyeTransform(-40f)));
-		_sceneManager.AddScene(new Scene(SceneID.Texture, woodTexture, [cube], eyeTransform2(-20f, -50f)));
-		_sceneManager.AddScene(new Scene(SceneID.Lambert, lambertian, [teapot], eyeTransform(-20f)));
-		_sceneManager.AddScene(new Scene(SceneID.Phong, blinnPhong, [teapot], eyeTransform(-20f)));
-		_sceneManager.AddScene(new Scene(SceneID.Normals, normalColor, [teapot], eyeTransform(-20f)));
-		_sceneManager.AddScene(new Scene(SceneID.Checkered, checkered, [teapot], eyeTransform(-20f)));
-		_sceneManager.AddScene(new Scene(SceneID.CookTorrance, cookTorrance, [head]));
-		_sceneManager.AddScene(new Scene(SceneID.Spotlight, spotlight, [head]));
-		_sceneManager.AddScene(new Scene(SceneID.Multilight, multilight, [head]));
-		_sceneManager.AddScene(new ProjectScene(projection, [teapot], eyeTransform(-20f)));
-		_sceneManager.AddScene(new Scene(SceneID.Monochrome, cookTorrance, [head], null, monoFilter));
-		_sceneManager.AddScene(new Scene(SceneID.GaussianBlur, normalColor, [head], null, gaussianFilter));
-		_sceneManager.AddScene(new CullingScene(normalColor, headgeRow, totalWidth));
+		_renderer.AddScene(new TerrainScene(_graphicsDevice, Content.Load<Texture2D>("Textures/HeightMap"), eyeTransform(200f, -40f, -20f)));
+		_renderer.AddScene(new Scene(SceneID.Lambert, lambertian, [teapot], eyeTransform(100f, -20f)));
+		_renderer.AddScene(new Scene(SceneID.Phong, blinnPhong, [teapot], eyeTransform(100f, -20f)));
+		_renderer.AddScene(new Scene(SceneID.Normals, normalColor, [teapot], eyeTransform(100f, -20f)));
+		_renderer.AddScene(new Scene(SceneID.Texture, woodTexture, [cube], eyeTransform(100f, -20f, -50f)));
+		_renderer.AddScene(new Scene(SceneID.Checkered, checkered, [teapot], eyeTransform(100f, -20f)));
+		_renderer.AddScene(new Scene(SceneID.CookTorrance, cookTorrance, [head]));
+		_renderer.AddScene(new Scene(SceneID.Spotlight, spotlight, [head]));
+		_renderer.AddScene(new Scene(SceneID.Multilight, multilight, [head]));
+		_renderer.AddScene(new Scene(SceneID.Monochrome, cookTorrance, [head], null, monochrome));
+		_renderer.AddScene(new Scene(SceneID.GaussianBlur, normalColor, [head], null, gaussianBlur));
+		_renderer.AddScene(new ProjectScene(projective, [teapot], eyeTransform(100f, -20f)));
+		_renderer.AddScene(new CullingScene(normalColor, headgeRow, totalWidth));
 
-		// Initialize camera orbit state
-		_sceneManager.Camera.SyncOrbitToCamera();
+		_prevMouseState = Mouse.GetState();
+		_input = new Input(Window, _renderer);
 
-		_input = new Input(Window, _sceneManager);
+		_renderer.Camera.SyncOrbitToCamera();
+
+		// Register overlay as a component to call Update() automatically
+		_overlay = new Overlay(this, _renderer, _spriteFont, _spriteBatch, Window);
+		Components.Add(_overlay);
 	}
 
 	protected override void Update(GameTime gameTime)
 	{
-		float delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
-		_sceneManager.Update(delta);
+		float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
+		_renderer.Update(elapsed);
 
 		bool isMouseVisible = IsMouseVisible;
-		_input.Update(delta, ref isMouseVisible, _sceneManager.Camera.SyncOrbitToCamera);
+
+		// Track scene index before input or overlay updates
+		int prevSceneIndex = _renderer.CurrentSceneIndex;
+
+		// Pass dropdown expanded state and scene change callback
+		_input.Update(
+			elapsed,
+			ref isMouseVisible,
+			_renderer.Camera.SyncOrbitToCamera,
+			_overlay.DropdownExpanded,
+			_dropdownExpandedLast,
+			_overlay.DropdownMouseOver, () =>
+			{
+				_renderer.LoadAdjacent(false);
+				_renderer.Camera.SyncOrbitToCamera();
+			});
+
 		IsMouseVisible = isMouseVisible;
+
+		var mouse = Mouse.GetState();
+		_overlay.UpdateOverlay(mouse, _prevMouseState);
+
+		int newSceneIndex = _renderer.CurrentSceneIndex;
+		if (newSceneIndex != prevSceneIndex)
+		{
+			_overlay.SelectedSceneIndex = newSceneIndex;
+		}
+
+		_prevMouseState = mouse;
+		_dropdownExpandedLast = _overlay.DropdownExpanded;
 
 		base.Update(gameTime);
 	}
 
 	protected override void Draw(GameTime gameTime)
 	{
-		_sceneManager.Draw();
+		_renderer.Draw();
+		_overlay.Draw();
 
-		// Draw FPS counter at top-right
-		_spriteBatch.Begin();
-		string fpsText = $"FPS: {_frameRateCounter.FrameRate}";
-		Vector2 textSize = _spriteFont.MeasureString(fpsText);
-		Vector2 position = new(Window.ClientBounds.Width - textSize.X - 16, 16);
-		_spriteBatch.DrawString(_spriteFont, fpsText, position, Color.Yellow);
-		_spriteBatch.End();
-
-		// Reset device states to defaults for 3D rendering
-		GraphicsDevice.BlendState = BlendState.Opaque;
-		GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-		GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
-		GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
+		// Reset device state after overlay/UI
+		if (_graphicsDevice.BlendState != BlendState.Opaque)
+			_graphicsDevice.BlendState = BlendState.Opaque;
+		if (_graphicsDevice.DepthStencilState != DepthStencilState.Default)
+			_graphicsDevice.DepthStencilState = DepthStencilState.Default;
+		if (_graphicsDevice.RasterizerState != RasterizerState.CullCounterClockwise)
+			_graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+		if (_graphicsDevice.SamplerStates[0] != SamplerState.LinearWrap)
+			_graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
 
 		base.Draw(gameTime);
 	}

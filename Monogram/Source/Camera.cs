@@ -105,7 +105,7 @@ public class Camera
 	/// <summary>
 	/// Orbit camera logic: updates yaw/pitch based on mouse delta and updates camera position.
 	/// </summary>
-	public void Orbit(int dx, int dy)
+	public void Orbit(float dx, float dy)
 	{
 		const float sensitivity = 0.01f;
 		_orbitYaw -= dx * sensitivity;

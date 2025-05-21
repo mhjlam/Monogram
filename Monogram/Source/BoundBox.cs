@@ -95,6 +95,21 @@ public class BoundBox : DrawableGameComponent
 		return BoundingBox.CreateFromPoints(transformed);
 	}
 
+	public static BoundingBox Transform(BoundingBox box, Matrix transform)
+	{
+		var corners = box.GetCorners();
+		for (int i = 0; i < corners.Length; i++)
+			corners[i] = Vector3.Transform(corners[i], transform);
+
+		Vector3 min = corners[0], max = corners[0];
+		for (int i = 1; i < corners.Length; i++)
+		{
+			min = Vector3.Min(min, corners[i]);
+			max = Vector3.Max(max, corners[i]);
+		}
+		return new BoundingBox(min, max);
+	}
+
 	public static void Draw(GraphicsDevice device, BoundingBox box, Camera camera, Color color)
 	{
 		var corners = box.GetCorners();

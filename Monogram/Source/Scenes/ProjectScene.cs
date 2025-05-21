@@ -11,12 +11,12 @@ public class ProjectScene(Shader shader, List<Model> models, Vector3? eye = null
 	{
 		base.Update(deltaTime);
 
-		Shader.Effect.Parameters["Time"]?.SetValue(_accumulatedTime);
+		Shader.Effect.Parameters["Time"]?.SetValue(_elapsed);
 
 		// Rotate all models around the Y axis based on elapsed time
 		foreach (var model in Models)
 		{
-			model.Rotation = new Vector3(model.Rotation.X, _accumulatedTime, model.Rotation.Z);
+			model.Rotation = new Vector3(model.Rotation.X, _elapsed, model.Rotation.Z);
 		}
 
 		if (Shader.Effect.Parameters["ProjectorViewProjection"] != null)

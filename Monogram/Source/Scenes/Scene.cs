@@ -30,7 +30,7 @@ public class Scene(SceneID id, Shader shader, List<Model> models, Vector3? eye =
 	public Shader Shader { get; } = shader;
 	public Filter? PostProcess { get; } = postProcess;
 
-	protected float _accumulatedTime = 0f;
+	protected float _elapsed = 0f;
 
 	public virtual string SceneTitle =>
 		Id switch
@@ -51,11 +51,11 @@ public class Scene(SceneID id, Shader shader, List<Model> models, Vector3? eye =
 			_ => Id.ToString()
 		};
 
-	public virtual void Update(float deltaTime)
+	public virtual void Update(float elapsed)
 	{
-		_accumulatedTime += deltaTime;
-		if (float.IsPositiveInfinity(_accumulatedTime))
-			_accumulatedTime = 0f;
+		_elapsed += elapsed;
+		if (float.IsPositiveInfinity(_elapsed))
+			_elapsed = 0f;
 	}
 
 	public virtual void Draw(GraphicsDevice device, BoundingFrustum frustum, Camera camera, RenderTarget2D? capture)
@@ -66,19 +66,19 @@ public class Scene(SceneID id, Shader shader, List<Model> models, Vector3? eye =
 
 		foreach (var model in Models)
 		{
-			if (model.XnaModel != null)
+			if (model.XnaModel != null && model.UseBoundingSphere)
 			{
 				BoundingSphere boundingSphere = new();
 				foreach (ModelMesh mesh in model.XnaModel.Meshes)
 					boundingSphere = BoundingSphere.CreateMerged(boundingSphere, mesh.BoundingSphere);
-				
+
 				boundingSphere.Center = model.Position;
 				if (frustum.Intersects(boundingSphere))
-					model.Draw(this, camera);
+					model.Draw(Shader.Effect, camera);
 			}
 			else
 			{
-				model.Draw(this, camera);
+				model.Draw(Shader.Effect, camera);
 			}
 		}
 
@@ -92,6 +92,6 @@ public class Scene(SceneID id, Shader shader, List<Model> models, Vector3? eye =
 
 	public virtual void DrawOverlay(SpriteBatch batch, SpriteFont font)
 	{
-		batch.DrawString(font, SceneTitle, new Vector2(20f, 20f), Color.White);
+		// Default: do nothing. Override in derived scenes for custom UI.
 	}
 }

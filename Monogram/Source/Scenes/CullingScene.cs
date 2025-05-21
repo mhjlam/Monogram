@@ -3,18 +3,19 @@ using Microsoft.Xna.Framework.Graphics;
 using Monogram.Source.Scenes;
 using System;
 using System.Collections.Generic;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Monogram.Scenes;
 
-// Culling scene with custom draw and overlay
 public class CullingScene(Shader shader, List<Model> models, float totalWidth, Vector3? eye = null) : Scene(SceneID.Culling, shader, models, eye)
 {
 	private int _culledCount;
 	private int _totalCount;
 
-	private readonly float _amplitude = 30f;	// How much spacing increases/decreases
-	private readonly float _frequency = 0.5f;	// Oscillations per second
+	private readonly float _amplitude = 30f;
+	private readonly float _frequency = 0.5f;
 	private readonly float _totalWidth = totalWidth;
+	private readonly Dictionary<Model, BoundingBox?> _boundingBoxCache = new();
 
 	public int CulledCount => _culledCount;
 	public int TotalCount => _totalCount;
@@ -23,10 +24,9 @@ public class CullingScene(Shader shader, List<Model> models, float totalWidth, V
 	{
 		base.Update(deltaTime);
 
-		// Reset accumulated time after each full oscillation
-		_accumulatedTime = MathF.Max(0f, _accumulatedTime >= 1f / _frequency ? 0f : _accumulatedTime);
+		_elapsed = MathF.Max(0f, _elapsed >= 1f / _frequency ? 0f : _elapsed);
 
-		float oscillate = MathF.Sin(_accumulatedTime * MathF.Tau * _frequency);
+		float oscillate = MathF.Sin(_elapsed * MathF.Tau * _frequency);
 		float width = _totalWidth + _amplitude * (0.5f + 0.5f * oscillate) * (Models.Count - 1);
 		float spacing = width / (Models.Count - 1);
 		float startX = -width / 2f;
@@ -37,6 +37,8 @@ public class CullingScene(Shader shader, List<Model> models, float totalWidth, V
 			float x = startX + i * spacing;
 			model.Position = new Vector3(x, 0f, 0f);
 		}
+
+		_boundingBoxCache.Clear(); // Invalidate cache after moving models
 	}
 
 	public override void Draw(GraphicsDevice device, BoundingFrustum frustum, Camera camera, RenderTarget2D? capture)
@@ -51,24 +53,22 @@ public class CullingScene(Shader shader, List<Model> models, float totalWidth, V
 		{
 			if (model.XnaModel != null)
 			{
-				// Compute the model's bounding box in world space
-				BoundingBox? boundingBox = BoundBox.GetModelBoundingBox(model);
+				var boundingBox = BoundBox.GetModelBoundingBox(model);
 				if (boundingBox.HasValue)
 				{
 					_totalCount++;
 					bool visible = frustum.Intersects(boundingBox.Value);
 					if (visible)
-						model.Draw(this, camera);
+						model.Draw(Shader.Effect, camera);
 					else
 						_culledCount++;
 
-					// Visualize bounding box
 					BoundBox.Draw(device, boundingBox.Value, camera, Color.White);
 				}
 			}
 			else
 			{
-				model.Draw(this, camera);
+				model.Draw(Shader.Effect, camera);
 				_totalCount++;
 			}
 		}
@@ -82,8 +82,13 @@ public class CullingScene(Shader shader, List<Model> models, float totalWidth, V
 
 	public override void DrawOverlay(SpriteBatch batch, SpriteFont font)
 	{
-		base.DrawOverlay(batch, font);
-		string cullText = $"Culled: {_culledCount} / {_totalCount}";
-		batch.DrawString(font, cullText, new Vector2(20f, 48f), Color.Orange);
+		string text = $"Culled: {_culledCount} / {_totalCount}";
+
+		// Get viewport height for bottom alignment
+		int screenHeight = batch.GraphicsDevice.Viewport.Height;
+		Vector2 textSize = font.MeasureString(text);
+		Vector2 position = new(24, screenHeight - textSize.Y - 24);
+
+		batch.DrawString(font, text, position, Color.Orange);
 	}
 }

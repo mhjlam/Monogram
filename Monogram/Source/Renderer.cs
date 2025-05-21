@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using Monogram.Source.Scenes;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,8 +9,6 @@ namespace Monogram;
 
 public class Renderer
 {
-	private readonly SpriteFont font;
-	private readonly SpriteBatch batch;
 	private readonly GraphicsDevice device;
 
 	private Scene scene = null!; // Initialize with null-forgiving operator to satisfy the compiler.
@@ -22,12 +21,13 @@ public class Renderer
 	public SceneID SceneID => scene.Id;
 	public Camera Camera => camera;
 	public List<Model> SceneModels => scene.Models;
+	public List<string> SceneNames => [.. scenes.Select(s => s.SceneTitle)];
+	public int CurrentSceneIndex => scenes.FindIndex(s => s == scene);
+	public Scene? CurrentScene => scene;
 
 	public Renderer(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont spriteFont)
 	{
 		device = graphicsDevice;
-		batch = spriteBatch;
-		font = spriteFont;
 
 		scenes = [];
 		capture = new RenderTarget2D(device, device.Viewport.Width, device.Viewport.Height, false, device.PresentationParameters.BackBufferFormat, DepthFormat.Depth24);
@@ -39,6 +39,8 @@ public class Renderer
 	public void AddScene(Scene scene)
 	{
 		scenes.Add(scene);
+
+		// Load first scene
 		if (scenes.Count == 1)
 			LoadScene(0);
 	}
@@ -46,7 +48,7 @@ public class Renderer
 	public void LoadScene(int index)
 	{
 		if (scenes.Count == 0) return;
-		if (scenes.Count == 1) index = 0;
+		if (index < 0 || index >= scenes.Count) return;
 
 		scene = scenes[index];
 		scene.Models.ForEach(m => m.Reset());
@@ -64,31 +66,23 @@ public class Renderer
 		LoadScene(newIndex);
 	}
 
-	public void Update(float deltaTime)
+	public void Update(float elapsed)
 	{
 		camera.Update();
 		frustum.Matrix = camera.ViewMatrix * camera.ProjectionMatrix;
 		scene.Shader.Effect.Parameters["CameraPosition"]?.SetValue(camera.Position);
 
-		scene.Update(deltaTime);
+		scene.Update(elapsed);
 	}
 
 	public void Draw()
 	{
-		if (scenes.Count == 0 || scene.Models.Count == 0) return;
-
+		// Clear back and depth buffer
 		device.Clear(Color.Black);
+
+		if (scene == null) return;
 
 		// Scene-specific 3D rendering (including postprocess if needed)
 		scene.Draw(device, frustum, camera, capture);
-
-		// Overlay (scene info, stats, etc)
-		batch.Begin();
-		scene.DrawOverlay(batch, font);
-		batch.End();
-
-		device.BlendState = BlendState.Opaque;
-		device.DepthStencilState = DepthStencilState.Default;
-		device.SamplerStates[0] = SamplerState.LinearWrap;
 	}
 }

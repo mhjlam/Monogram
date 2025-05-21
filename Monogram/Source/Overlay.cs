@@ -1,52 +1,49 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
 
 namespace Monogram;
 
 public class Overlay(Game game, Renderer renderer, SpriteFont font, SpriteBatch batch, GameWindow window) : DrawableGameComponent(game)
 {
-	private readonly Renderer _renderer = renderer;
-	private readonly SpriteFont _font = font;
-	private readonly SpriteBatch _batch = batch;
-	private readonly GameWindow _window = window;
-	private readonly SceneDropdown _dropdown = new(renderer.SceneNames, font, 20, 20);
+    private readonly Renderer _renderer = renderer;
+    private readonly SpriteFont _font = font;
+    private readonly SpriteBatch _batch = batch;
+    private readonly GameWindow _window = window;
+    private readonly SceneDropdown _dropdown = new(renderer.SceneNames, font, 20, 20);
 
-	private int _frameRate;
+    private int _frameRate;
     private int _frameCounter;
     private int _secondsPassed;
+    private int _lastDropdownIndex = 0;
 
-	private int _lastDropdownIndex = 0;
+    public int SelectedSceneIndex
+    {
+        get => _dropdown.SelectedIndex;
+        set
+        {
+            _lastDropdownIndex = value;
+            _dropdown.SelectedIndex = value;
+        }
+    }
+    public bool DropdownExpanded => _dropdown.Expanded;
+    public bool DropdownMouseOver => _dropdown.IsMouseOver;
 
-	public int SelectedSceneIndex
-	{
-		get => _dropdown.SelectedIndex;
-		set
-		{
-			// Update last index to prevent unwanted reloads
-			_lastDropdownIndex = value;
-			_dropdown.SelectedIndex = value;
-		}
-	}
-	public bool DropdownExpanded => _dropdown.Expanded;
-	public bool DropdownMouseOver => _dropdown.IsMouseOver;
+    public void UpdateOverlay(MouseState mouse, MouseState prevMouse)
+    {
+        bool dropdownWasExpanded = _dropdown.Expanded;
+        _dropdown.Update(mouse, prevMouse);
 
-	public void UpdateOverlay(MouseState mouse, MouseState prevMouse)
-	{
-		bool dropdownWasExpanded = _dropdown.Expanded;
-		_dropdown.Update(mouse, prevMouse);
+        // Only change scene if the dropdown just closed and the index changed
+        if (!_dropdown.Expanded && dropdownWasExpanded && _dropdown.SelectedIndex != _lastDropdownIndex)
+        {
+            _renderer.LoadScene(_dropdown.SelectedIndex);
+            _renderer.Camera.SyncOrbitToCamera();
+        }
+        _lastDropdownIndex = _dropdown.SelectedIndex;
+    }
 
-		// Only change scene if the dropdown just closed and the index changed
-		if (!_dropdown.Expanded && dropdownWasExpanded && _dropdown.SelectedIndex != _lastDropdownIndex)
-		{
-			_renderer.LoadScene(_dropdown.SelectedIndex);
-			_renderer.Camera.SyncOrbitToCamera();
-		}
-		_lastDropdownIndex = _dropdown.SelectedIndex;
-	}
-
-	public override void Update(GameTime gameTime)
+    public override void Update(GameTime gameTime)
     {
         if (_secondsPassed != gameTime.TotalGameTime.Seconds)
         {
@@ -58,23 +55,9 @@ public class Overlay(Game game, Renderer renderer, SpriteFont font, SpriteBatch 
         base.Update(gameTime);
     }
 
-    public void Update(
-        float delta,
-        ref bool isMouseVisible,
-        Action syncOrbitToCamera,
-        bool dropdownExpanded,
-        bool dropdownExpandedLast,
-        bool dropdownMouseOver, 
-        Action onSceneClick)
-    {
-        // Implementation for the new Update method can be added here.
-    }
-
     public void Draw()
     {
         _batch.Begin();
-
-        // Draw dropdown
         _dropdown.Draw(_batch);
 
         // Draw FPS counter at top-right
@@ -87,5 +70,5 @@ public class Overlay(Game game, Renderer renderer, SpriteFont font, SpriteBatch 
         _renderer.CurrentScene?.DrawOverlay(_batch, _font);
 
         _batch.End();
-	}
+    }
 }

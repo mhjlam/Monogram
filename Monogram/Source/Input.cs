@@ -12,15 +12,17 @@ public class Input(GameWindow window, Renderer sceneManager)
     private MouseState _newMouseState;
     private bool _isRightMouseDown = false;
     private Point _preLockMousePosition;
-    private readonly Point _windowCenter = new Point(window.ClientBounds.Width / 2, window.ClientBounds.Height / 2);
+    private readonly Point _windowCenter = new(window.ClientBounds.Width / 2, window.ClientBounds.Height / 2);
     private readonly GameWindow _window = window;
     private readonly Renderer _sceneManager = sceneManager;
     private float _modelRotation = 0f;
-    private readonly float _mouseSensitivity = 800.0f;
+    private const float MouseSensitivity = 800.0f;
     private bool _resetMousePosition = false;
     private bool _mousePressed = false;
     private Point _mouseDownPos;
     private const int MouseMoveThreshold = 10;
+    private const float ModelScrollSensitivity = 0.5f;
+    private const float ModelRotationSmoothing = 0.9f;
 
     public void Update(
         float delta,
@@ -28,17 +30,34 @@ public class Input(GameWindow window, Renderer sceneManager)
         Action syncOrbitToCamera,
         bool dropdownExpanded,
         bool dropdownExpandedLast,
-		bool dropdownMouseOver,
-		Action onSceneClick)
+        bool dropdownMouseOver,
+        Action onSceneClick)
     {
         _newKeyState = Keyboard.GetState();
         _newMouseState = Mouse.GetState();
 
-        // Keyboard controls
+        HandleKeyboard(delta, syncOrbitToCamera);
+        HandleMouse(delta, ref isMouseVisible);
+
+        HandleMouseClick(dropdownExpanded, dropdownExpandedLast, dropdownMouseOver, onSceneClick);
+
+        // Apply smooth model rotation
+        if (Math.Abs(_modelRotation) > 0.0001f)
+        {
+            _sceneManager.SceneModels.ForEach(m => m.RotationY += _modelRotation * delta);
+            _modelRotation *= ModelRotationSmoothing;
+        }
+
+        _oldKeyState = _newKeyState;
+        _oldMouseState = _newMouseState;
+    }
+
+    private void HandleKeyboard(float delta, Action syncOrbitToCamera)
+    {
         if (_newKeyState.IsKeyDown(Keys.Escape)) Environment.Exit(0);
 
-        if (_newKeyState.IsKeyDown(Keys.A)) _sceneManager.SceneModels.ForEach(m => m.RotateY(delta));
-        if (_newKeyState.IsKeyDown(Keys.D)) _sceneManager.SceneModels.ForEach(m => m.RotateY(-delta));
+        if (_newKeyState.IsKeyDown(Keys.A)) _sceneManager.SceneModels.ForEach(m => m.RotationY += delta);
+        if (_newKeyState.IsKeyDown(Keys.D)) _sceneManager.SceneModels.ForEach(m => m.RotationY += -delta);
 
         if (_newKeyState.IsKeyDown(Keys.Tab) && _oldKeyState.IsKeyUp(Keys.Tab))
         {
@@ -52,14 +71,16 @@ public class Input(GameWindow window, Renderer sceneManager)
             _sceneManager.SceneModels.ForEach(m => m.Reset());
             syncOrbitToCamera();
         }
+    }
 
-        // Mouse controls for orbit camera
+    private void HandleMouse(float delta, ref bool isMouseVisible)
+    {
         bool rightDown = _newMouseState.RightButton == ButtonState.Pressed;
         if (rightDown)
         {
             if (!_isRightMouseDown)
             {
-                _preLockMousePosition = new Point(_newMouseState.X, _newMouseState.Y);
+                _preLockMousePosition = new(_newMouseState.X, _newMouseState.Y);
                 _sceneManager.Camera.SyncOrbitToCamera();
                 Mouse.SetPosition(_window.ClientBounds.Left + _windowCenter.X, _window.ClientBounds.Top + _windowCenter.Y);
                 _oldMouseState = Mouse.GetState();
@@ -68,8 +89,8 @@ public class Input(GameWindow window, Renderer sceneManager)
             }
             else
             {
-                float dx = (_newMouseState.X - (_window.ClientBounds.Left + _windowCenter.X)) * delta * _mouseSensitivity;
-                float dy = (_newMouseState.Y - (_window.ClientBounds.Top + _windowCenter.Y)) * delta * _mouseSensitivity;
+                float dx = (_newMouseState.X - (_window.ClientBounds.Left + _windowCenter.X)) * delta * MouseSensitivity;
+                float dy = (_newMouseState.Y - (_window.ClientBounds.Top + _windowCenter.Y)) * delta * MouseSensitivity;
 
                 _sceneManager.Camera.Orbit(dx, dy);
 
@@ -97,16 +118,17 @@ public class Input(GameWindow window, Renderer sceneManager)
             }
             else
             {
-                const float modelScrollSensitivity = 0.5f;
-                _modelRotation += scrollDelta * modelScrollSensitivity;
+                _modelRotation += scrollDelta * ModelScrollSensitivity;
             }
         }
+    }
 
-        // Mouse click scene change logic
+    private void HandleMouseClick(bool dropdownExpanded, bool dropdownExpandedLast, bool dropdownMouseOver, Action onSceneClick)
+    {
         if (_newMouseState.LeftButton == ButtonState.Pressed && _oldMouseState.LeftButton == ButtonState.Released)
         {
             _mousePressed = true;
-            _mouseDownPos = new Point(_newMouseState.X, _newMouseState.Y);
+            _mouseDownPos = new(_newMouseState.X, _newMouseState.Y);
         }
 
         if (_newMouseState.LeftButton == ButtonState.Released && _oldMouseState.LeftButton == ButtonState.Pressed)
@@ -125,15 +147,5 @@ public class Input(GameWindow window, Renderer sceneManager)
                 }
             }
         }
-
-        // Apply smooth model rotation
-        if (Math.Abs(_modelRotation) > 0.0001f)
-        {
-            _sceneManager.SceneModels.ForEach(m => m.RotateY(_modelRotation * delta));
-            _modelRotation *= 0.9f;
-        }
-
-        _oldKeyState = _newKeyState;
-        _oldMouseState = _newMouseState;
     }
 }

@@ -10,7 +10,7 @@ public class TerrainModel : Model
 {
 	private readonly VertexBuffer _vertexBuffer;
 	private readonly IndexBuffer _indexBuffer;
-	private readonly int _primitiveCount = 0;
+	private readonly int _primitiveCount;
 	private Vertex[] _vertices;
 
 	private readonly float minY, maxY, rangeY;

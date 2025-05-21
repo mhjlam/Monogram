@@ -38,12 +38,6 @@ public class Camera
 		Reset();
 	}
 
-	public void Transform(Matrix transformationMatrix)
-	{
-		view = Matrix.Multiply(view, transformationMatrix);
-		Vector3.Transform(position, transformationMatrix);
-	}
-
 	public void SetEye(Vector3 position, bool isDefault = false)
 	{
 		this.position = position;
@@ -71,9 +65,6 @@ public class Camera
 		SyncOrbitToCamera();
 	}
 
-	/// <summary>
-	/// Syncs the orbit state (yaw, pitch, distance) to the current camera position.
-	/// </summary>
 	public void SyncOrbitToCamera()
 	{
 		_orbitDistance = (position - Vector3.Zero).Length();
@@ -90,9 +81,6 @@ public class Camera
 		}
 	}
 
-	/// <summary>
-	/// Sets the orbit state and updates the camera position.
-	/// </summary>
 	public void SetOrbit(float yaw, float pitch, float distance)
 	{
 		_orbitYaw = yaw;
@@ -102,9 +90,6 @@ public class Camera
 		SetGaze(Vector3.Zero);
 	}
 
-	/// <summary>
-	/// Orbit camera logic: updates yaw/pitch based on mouse delta and updates camera position.
-	/// </summary>
 	public void Orbit(float dx, float dy)
 	{
 		const float sensitivity = 0.01f;

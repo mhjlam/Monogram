@@ -21,7 +21,6 @@ public enum SceneID
 	GaussianBlur
 }
 
-// Base Scene class
 public class Scene(SceneID id, Shader shader, List<Model> models, Vector3? eye = null, Filter? postProcess = null)
 {
 	public SceneID Id { get; } = id;
@@ -60,7 +59,6 @@ public class Scene(SceneID id, Shader shader, List<Model> models, Vector3? eye =
 
 	public virtual void Draw(GraphicsDevice device, BoundingFrustum frustum, Camera camera, RenderTarget2D? capture)
 	{
-		// If postprocess, render to capture target
 		if (PostProcess != null && capture != null)
 			device.SetRenderTarget(capture);
 
@@ -82,7 +80,6 @@ public class Scene(SceneID id, Shader shader, List<Model> models, Vector3? eye =
 			}
 		}
 
-		// If postprocess, draw to backbuffer
 		if (PostProcess != null && capture != null)
 		{
 			device.SetRenderTarget(null);

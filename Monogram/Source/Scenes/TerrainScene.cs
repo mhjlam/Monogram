@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monogram.Source.Scenes;
 using System;
+using System.Threading.Tasks;
 
 namespace Monogram.Scenes;
 
@@ -27,11 +28,11 @@ public class TerrainScene : Scene
 	private static readonly (float height, Color color)[] ColorStops =
 	{
 		(1.00f, Color.White),                        // Snow
-		(0.80f, new Color(120, 220, 120)),           // Bright green
-		(0.60f, new Color(34, 139, 34)),             // Dark green
-		(0.40f, new Color(210, 180, 60)),            // Yellowish (sand/grass)
-		(0.00f, new Color(30, 60, 180))              // Blue (water)
-	};
+        (0.80f, new Color(120, 220, 120)),           // Bright green
+        (0.60f, new Color(34, 139, 34)),             // Dark green
+        (0.40f, new Color(210, 180, 60)),            // Yellowish (sand/grass)
+        (0.00f, new Color(30, 60, 180))              // Blue (water)
+    };
 
 	public TerrainScene(GraphicsDevice graphicsDevice, Texture2D heightMap, Vector3? eye = null)
 		: base(SceneID.Terrain, new Shader(new BasicEffect(graphicsDevice)), [], eye)
@@ -61,11 +62,10 @@ public class TerrainScene : Scene
 			_scanDirection = (ScanDirection)(((int)_scanDirection + 1) % 6);
 		}
 
-		 // Replace the for-loop in Update with a parallel loop for large terrains
 		var vertices = _terrainModel.Vertices;
 		int vertexCount = vertices.Length;
 
-		System.Threading.Tasks.Parallel.For(0, vertexCount, i =>
+		Parallel.For(0, vertexCount, i =>
 		{
 			var pos = vertices[i].Position;
 			var (normX, normY, normZ) = _terrainModel.NormalizedPosition(pos);
@@ -109,16 +109,12 @@ public class TerrainScene : Scene
 
 	public override void Draw(GraphicsDevice graphicsDevice, BoundingFrustum frustum, Camera camera, RenderTarget2D? capture)
 	{
-		// Set up the effect for the terrain model and call its Draw
 		_basicEffect.World = Matrix.Identity * _terrainModel.TransformationMatrix;
 		_basicEffect.View = camera.ViewMatrix;
 		_basicEffect.Projection = camera.ProjectionMatrix;
-
-		// Use a temporary Scene to pass the effect to the model
 		_terrainModel.Draw(_basicEffect, camera);
 	}
 
-	// Helper for multi-stop color interpolation
 	private static Color InterpolateTerrainColor(float normH, (float height, Color color)[] stops)
 	{
 		for (int s = 0; s < stops.Length - 1; ++s)
@@ -135,7 +131,6 @@ public class TerrainScene : Scene
 				);
 			}
 		}
-		// If out of range, clamp to the closest stop
 		return normH > stops[0].height ? stops[0].color : stops[^1].color;
 	}
 

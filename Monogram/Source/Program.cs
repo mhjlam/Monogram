@@ -60,9 +60,9 @@ public sealed class Program : Game
 		_graphicsDevice.RasterizerState = new RasterizerState();
 
 		_spriteBatch = new SpriteBatch(_graphicsDevice);
-		_spriteFont = Content.Load<SpriteFont>("Fonts/Consolas12");
+		_spriteFont = Content.Load<SpriteFont>("Fonts/SegoeUI");
 
-		_renderer = new Renderer(_graphicsDevice, _spriteBatch, _spriteFont);
+		_renderer = new Renderer(_graphicsDevice);
 
 		// Models
 		var head = new Model(Content.Load<XnaModel>("Models/FemaleHead"));

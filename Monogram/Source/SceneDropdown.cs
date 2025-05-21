@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Monogram
 {
@@ -35,27 +36,16 @@ namespace Monogram
             _width = width;
             _selectedIndex = 0;
             _dropdownRect = new Rectangle(x, y, width, _itemHeight);
-            _itemRects = new Rectangle[_sceneNames.Count];
-            for (int i = 0; i < _sceneNames.Count; i++)
-                _itemRects[i] = new Rectangle(x, y + _itemHeight * (i + 1), width, _itemHeight);
+            _itemRects = Enumerable.Range(0, _sceneNames.Count)
+                .Select(i => new Rectangle(x, y + _itemHeight * (i + 1), width, _itemHeight))
+                .ToArray();
         }
 
         public void Update(MouseState mouse, MouseState prevMouse)
         {
             Point mousePos = new(mouse.X, mouse.Y);
             bool overDropdown = _dropdownRect.Contains(mousePos);
-            bool overItem = false;
-            if (_expanded)
-            {
-                for (int i = 0; i < _itemRects.Length; i++)
-                {
-                    if (_itemRects[i].Contains(mousePos))
-                    {
-                        overItem = true;
-                        break;
-                    }
-                }
-            }
+            bool overItem = _expanded && _itemRects.Any(r => r.Contains(mousePos));
             IsMouseOver = overDropdown || overItem;
 
             bool mouseClicked = mouse.LeftButton == ButtonState.Released && prevMouse.LeftButton == ButtonState.Pressed;
@@ -87,7 +77,7 @@ namespace Monogram
                     }
                 }
 
-                if (mouseClicked && !overDropdown && Array.TrueForAll(_itemRects, r => !r.Contains(mousePos)))
+                if (mouseClicked && !overDropdown && !_itemRects.Any(r => r.Contains(mousePos)))
                 {
                     _expanded = false;
                     return;
@@ -99,7 +89,7 @@ namespace Monogram
         {
             // Draw main box
             spriteBatch.DrawBox(_dropdownRect, Color.DarkSlateGray, Color.White);
-            spriteBatch.DrawString(_font, _sceneNames[_selectedIndex], new Vector2(_dropdownRect.X + 8, _dropdownRect.Y + 6), Color.White);
+            spriteBatch.DrawString(_font, _sceneNames[_selectedIndex], new Vector2(_dropdownRect.X + 8, _dropdownRect.Y + 3), Color.White);
 
             // Draw arrow with fallback if unsupported
             var arrowUp = "▲";
@@ -107,14 +97,12 @@ namespace Monogram
             var fallbackUp = "^";
             var fallbackDown = "v";
 
-            string arrow;
-            if (_expanded)
-                arrow = _font.Characters.Contains(arrowUp[0]) ? arrowUp : fallbackUp;
-            else
-                arrow = _font.Characters.Contains(arrowDown[0]) ? arrowDown : fallbackDown;
+            string arrow = _expanded
+                ? (_font.Characters.Contains(arrowUp[0]) ? arrowUp : fallbackUp)
+                : (_font.Characters.Contains(arrowDown[0]) ? arrowDown : fallbackDown);
 
             var arrowSize = _font.MeasureString(arrow);
-            spriteBatch.DrawString(_font, arrow, new Vector2(_dropdownRect.Right - arrowSize.X - 8, _dropdownRect.Y + 6), Color.White);
+            spriteBatch.DrawString(_font, arrow, new Vector2(_dropdownRect.Right - arrowSize.X - 8, _dropdownRect.Y + 3), Color.White);
 
             // Draw expanded items
             if (_expanded)
@@ -123,7 +111,7 @@ namespace Monogram
                 {
                     var rect = _itemRects[i];
                     spriteBatch.DrawBox(rect, i == _selectedIndex ? Color.DimGray : Color.Gray, Color.White);
-                    spriteBatch.DrawString(_font, _sceneNames[i], new Vector2(rect.X + 8, rect.Y + 6), Color.White);
+                    spriteBatch.DrawString(_font, _sceneNames[i], new Vector2(rect.X + 8, rect.Y + 3), Color.White);
                 }
             }
         }

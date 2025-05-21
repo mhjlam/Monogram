@@ -5,26 +5,17 @@ using System.Linq;
 
 namespace Monogram;
 
-public class BoundBox : DrawableGameComponent
+public class BoundBox(Game game, GraphicsDevice device, Camera camera, BoundingBox box, Color color) : DrawableGameComponent(game)
 {
-	private readonly GraphicsDevice _device;
-	private readonly Camera _camera;
-	private readonly Color _color;
-	private BoundingBox _box;
+	private readonly GraphicsDevice _device = device;
+	private readonly Camera _camera = camera;
+	private readonly Color _color = color;
+	private BoundingBox _box = box;
 
 	// Static resources for drawing
 	private static BasicEffect? effect = null;
 	private static VertexBuffer? vertexBuffer = null;
 	private static IndexBuffer? indexBuffer = null;
-
-	public BoundBox(Game game, GraphicsDevice device, Camera camera, BoundingBox box, Color color)
-		: base(game)
-	{
-		_device = device;
-		_camera = camera;
-		_box = box;
-		_color = color;
-	}
 
 	public void UpdateBox(BoundingBox newBox)
 	{
@@ -93,21 +84,6 @@ public class BoundBox : DrawableGameComponent
 		for (int i = 0; i < corners.Length; i++)
 			transformed[i] = Vector3.Transform(corners[i], transform);
 		return BoundingBox.CreateFromPoints(transformed);
-	}
-
-	public static BoundingBox Transform(BoundingBox box, Matrix transform)
-	{
-		var corners = box.GetCorners();
-		for (int i = 0; i < corners.Length; i++)
-			corners[i] = Vector3.Transform(corners[i], transform);
-
-		Vector3 min = corners[0], max = corners[0];
-		for (int i = 1; i < corners.Length; i++)
-		{
-			min = Vector3.Min(min, corners[i]);
-			max = Vector3.Max(max, corners[i]);
-		}
-		return new BoundingBox(min, max);
 	}
 
 	public static void Draw(GraphicsDevice device, BoundingBox box, Camera camera, Color color)

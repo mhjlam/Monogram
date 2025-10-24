@@ -1,25 +1,24 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36109.1
+VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monogram", "Monogram\Monogram.csproj", "{36985E9B-7652-4087-B52D-21B1CFF4699F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monogram", "Monogram.csproj", "{392E16B4-56C2-A536-500E-E2BE4267BC0E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Release|x64 = Release|x64
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{36985E9B-7652-4087-B52D-21B1CFF4699F}.Debug|x64.ActiveCfg = Debug|x64
-		{36985E9B-7652-4087-B52D-21B1CFF4699F}.Debug|x64.Build.0 = Debug|x64
-		{36985E9B-7652-4087-B52D-21B1CFF4699F}.Release|x64.ActiveCfg = Release|x64
-		{36985E9B-7652-4087-B52D-21B1CFF4699F}.Release|x64.Build.0 = Release|x64
+		{392E16B4-56C2-A536-500E-E2BE4267BC0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{392E16B4-56C2-A536-500E-E2BE4267BC0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{392E16B4-56C2-A536-500E-E2BE4267BC0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{392E16B4-56C2-A536-500E-E2BE4267BC0E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {D06F4565-B67E-4753-8DA0-C4238BC6B56D}
+		SolutionGuid = {EDBC4203-B3E8-4494-AD69-1A6AE566E66D}
 	EndGlobalSection
 EndGlobal

@@ -49,3 +49,7 @@ Monogram is a real-time 3D rendering demo built with MonoGame, showcasing advanc
 - **Input**: Handles all keyboard and mouse input, including camera movement, model rotation, and scene selection. Integrates with the dropdown and overlay for a seamless user experience.
 - **Camera**: Provides smooth orbit, zoom, and reset controls for viewing scenes from any angle. Essential for exploring 3D content.
 - **Overlay**: Displays the FPS counter, scene selection dropdown, and any scene-specific overlays (like culling stats), making it easy to monitor and interact with the demo.
+
+## License
+
+This software is licensed under the [CC BY-NC-SA](https://creativecommons.org/licenses/by-nc-sa/4.0/) license.

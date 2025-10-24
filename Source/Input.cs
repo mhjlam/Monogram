@@ -30,8 +30,7 @@ public class Input(GameWindow window, Renderer sceneManager)
         Action syncOrbitToCamera,
         bool dropdownExpanded,
         bool dropdownExpandedLast,
-        bool dropdownMouseOver,
-        Action onSceneClick)
+        bool dropdownMouseOver)
     {
         _newKeyState = Keyboard.GetState();
         _newMouseState = Mouse.GetState();
@@ -39,7 +38,7 @@ public class Input(GameWindow window, Renderer sceneManager)
         HandleKeyboard(delta, syncOrbitToCamera);
         HandleMouse(delta, ref isMouseVisible);
 
-        HandleMouseClick(dropdownExpanded, dropdownExpandedLast, dropdownMouseOver, onSceneClick);
+        HandleMouseClick(dropdownExpanded, dropdownExpandedLast, dropdownMouseOver);
 
         // Apply smooth model rotation
         if (Math.Abs(_modelRotation) > 0.0001f)
@@ -123,29 +122,12 @@ public class Input(GameWindow window, Renderer sceneManager)
         }
     }
 
-    private void HandleMouseClick(bool dropdownExpanded, bool dropdownExpandedLast, bool dropdownMouseOver, Action onSceneClick)
+    private void HandleMouseClick(bool dropdownExpanded, bool dropdownExpandedLast, bool dropdownMouseOver)
     {
         if (_newMouseState.LeftButton == ButtonState.Pressed && _oldMouseState.LeftButton == ButtonState.Released)
         {
             _mousePressed = true;
             _mouseDownPos = new(_newMouseState.X, _newMouseState.Y);
-        }
-
-        if (_newMouseState.LeftButton == ButtonState.Released && _oldMouseState.LeftButton == ButtonState.Pressed)
-        {
-            if (_mousePressed)
-            {
-                _mousePressed = false;
-                int dx = _newMouseState.X - _mouseDownPos.X;
-                int dy = _newMouseState.Y - _mouseDownPos.Y;
-                if (dx * dx + dy * dy <= MouseMoveThreshold * MouseMoveThreshold)
-                {
-                    if (!dropdownExpanded && !dropdownExpandedLast && !dropdownMouseOver)
-                    {
-                        onSceneClick?.Invoke();
-                    }
-                }
-            }
         }
     }
 }

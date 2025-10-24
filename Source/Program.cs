@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Input;
 using Monogram.Scenes;
 using Monogram.Source.Scenes;
 using System.Linq;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 using XnaModel = Microsoft.Xna.Framework.Graphics.Model;
 
 namespace Monogram;
@@ -188,11 +187,7 @@ public sealed class Program : Game
 			_renderer.Camera.SyncOrbitToCamera,
 			_overlay.DropdownExpanded,
 			_dropdownExpandedLast,
-			_overlay.DropdownMouseOver, () =>
-			{
-				_renderer.LoadAdjacent(false);
-				_renderer.Camera.SyncOrbitToCamera();
-			});
+			_overlay.DropdownMouseOver);
 
 		IsMouseVisible = isMouseVisible;
 

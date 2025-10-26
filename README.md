@@ -1,4 +1,10 @@
-# Monogram: Real-Time 3D Rendering Demo
+# Monogram
+
+Real-Time 3D Model and Scene Renderer
+
+<p align="center">
+   <img src="media/monogram.gif" alt="Demo Animation" width="720"/>
+</p>
 
 ## Overview
 

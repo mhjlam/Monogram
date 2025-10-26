@@ -7,9 +7,9 @@ namespace Monogram;
 public class Overlay(Game game, Renderer renderer, SpriteFont font, SpriteBatch batch, GameWindow window) : DrawableGameComponent(game)
 {
     private readonly Renderer _renderer = renderer;
+    private readonly GameWindow _window = window;
     private readonly SpriteFont _font = font;
     private readonly SpriteBatch _batch = batch;
-    private readonly GameWindow _window = window;
     private readonly SceneDropdown _dropdown = new(renderer.SceneNames, font, 20, 20);
 
     private int _frameRate;

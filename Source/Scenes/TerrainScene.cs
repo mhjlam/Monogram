@@ -12,7 +12,7 @@ public class TerrainScene : Scene
 	private readonly BasicEffect _basicEffect;
 
 	private float _scanPhase = 0f; // [0,1] progress in current direction
-	private float _scanDuration = 2f; // seconds per scan
+	private readonly float _scanDuration = 2f; // seconds per scan
 
 	private enum ScanDirection
 	{
@@ -77,20 +77,30 @@ public class TerrainScene : Scene
 			switch (_scanDirection)
 			{
 				case ScanDirection.TopToBottom:
+				{
 					scanDist = Math.Abs(normY - (1f - _scanPhase));
 					break;
+				}
 				case ScanDirection.BottomToTop:
+				{
 					scanDist = Math.Abs(normY - _scanPhase);
 					break;
+				}
 				case ScanDirection.LeftToRight:
+				{
 					scanDist = Math.Abs(normX - _scanPhase);
 					break;
+				}
 				case ScanDirection.RightToLeft:
+				{
 					scanDist = Math.Abs(normX - (1f - _scanPhase));
 					break;
+				}
 				case ScanDirection.BackToFront:
+				{
 					scanDist = Math.Abs(normZ - _scanPhase);
 					break;
+				}
 				case ScanDirection.FrontToBack:
 					scanDist = Math.Abs(normZ - (1f - _scanPhase));
 					break;
@@ -104,6 +114,7 @@ public class TerrainScene : Scene
 
 			vertices[i].Color = BlendScanlineColor(terrainColor, scanColor, blend);
 		});
+
 		_terrainModel.Update(vertices);
 	}
 
@@ -121,6 +132,7 @@ public class TerrainScene : Scene
 		{
 			var (h1, c1) = stops[s];
 			var (h2, c2) = stops[s + 1];
+
 			if (normH <= h1 && normH >= h2)
 			{
 				float t = (normH - h2) / (h1 - h2);

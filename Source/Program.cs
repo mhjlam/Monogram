@@ -181,13 +181,7 @@ public sealed class Program : Game
 		int prevSceneIndex = _renderer.CurrentSceneIndex;
 
 		// Pass dropdown expanded state and scene change callback
-		_input.Update(
-			elapsed,
-			ref isMouseVisible,
-			_renderer.Camera.SyncOrbitToCamera,
-			_overlay.DropdownExpanded,
-			_dropdownExpandedLast,
-			_overlay.DropdownMouseOver);
+		_input.Update(elapsed, ref isMouseVisible, _renderer.Camera.SyncOrbitToCamera);
 
 		IsMouseVisible = isMouseVisible;
 

@@ -1,22 +1,20 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Monogram.Source.Scenes;
 using System;
-using XnaModel = Microsoft.Xna.Framework.Graphics.Model;
 
 namespace Monogram;
 
 public class TerrainModel : Model
 {
-	private readonly VertexBuffer _vertexBuffer;
-	private readonly IndexBuffer _indexBuffer;
-	private readonly int _primitiveCount;
 	private Vertex[] _vertices;
-
+	
+	private readonly int _primitiveCount;
 	private readonly float minY, maxY, rangeY;
 	private readonly float minX, maxX, rangeX;
 	private readonly float minZ, maxZ, rangeZ;
-
+	private readonly IndexBuffer _indexBuffer;
+	private readonly VertexBuffer _vertexBuffer;
+	
 	public TerrainModel(GraphicsDevice device, Texture2D heightmap, Vector3? position = null, Vector3? rotation = null)
 		: base(null!, position ?? Vector3.Zero, rotation, new Vector3(1f, 0.25f, 1f))
 	{
@@ -64,7 +62,9 @@ public class TerrainModel : Model
 
 		// Compute normals
 		for (int i = 0; i < _vertices.Length; ++i)
+		{
 			_vertices[i].Normal = Vector3.Zero;
+		}
 
 		for (int i = 0; i < indices.Length / 3; ++i)
 		{
@@ -98,16 +98,18 @@ public class TerrainModel : Model
 		minY = float.MaxValue; maxY = float.MinValue;
 		minX = float.MaxValue; maxX = float.MinValue;
 		minZ = float.MaxValue; maxZ = float.MinValue;
+
 		for (int i = 0; i < _vertices.Length; ++i)
 		{
 			var pos = _vertices[i].Position;
-			if (pos.Y < minY) minY = pos.Y;
-			if (pos.Y > maxY) maxY = pos.Y;
-			if (pos.X < minX) minX = pos.X;
-			if (pos.X > maxX) maxX = pos.X;
-			if (pos.Z < minZ) minZ = pos.Z;
-			if (pos.Z > maxZ) maxZ = pos.Z;
+			if (pos.Y < minY) { minY = pos.Y; }
+			if (pos.Y > maxY) { maxY = pos.Y; }
+			if (pos.X < minX) { minX = pos.X; }
+			if (pos.X > maxX) { maxX = pos.X; }
+			if (pos.Z < minZ) { minZ = pos.Z; }
+			if (pos.Z > maxZ) { maxZ = pos.Z; }
 		}
+
 		rangeY = Math.Max(1e-5f, maxY - minY);
 		rangeX = Math.Max(1e-5f, maxX - minX);
 		rangeZ = Math.Max(1e-5f, maxZ - minZ);
@@ -115,7 +117,10 @@ public class TerrainModel : Model
 
 	public void Update(Vertex[] vertices)
 	{
-		if (_vertexBuffer == null) return;
+		if (_vertexBuffer == null)
+		{
+			return;
+		}
 		_vertexBuffer.SetData(vertices);
 	}
 
@@ -132,7 +137,9 @@ public class TerrainModel : Model
 		// Only change rasterizer state if needed
 		var previousRasterizerState = device.RasterizerState;
 		if (device.RasterizerState != RasterizerState.CullNone)
+		{
 			device.RasterizerState = RasterizerState.CullNone;
+		}
 
 		device.SetVertexBuffer(_vertexBuffer);
 		device.Indices = _indexBuffer;
@@ -145,7 +152,9 @@ public class TerrainModel : Model
 
 		// Restore rasterizer state only if it was changed
 		if (device.RasterizerState != previousRasterizerState)
+		{
 			device.RasterizerState = previousRasterizerState;
+		}
 	}
 
 	public Vertex[] Vertices

@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Monogram.Source.Scenes;
 using System;
 using System.Collections.Generic;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Monogram.Scenes;
 
@@ -15,10 +14,7 @@ public class CullingScene(Shader shader, List<Model> models, float totalWidth, V
 	private readonly float _amplitude = 30f;
 	private readonly float _frequency = 0.5f;
 	private readonly float _totalWidth = totalWidth;
-	private readonly Dictionary<Model, BoundingBox?> _boundingBoxCache = new();
-
-	public int CulledCount => _culledCount;
-	public int TotalCount => _totalCount;
+	private readonly Dictionary<Model, BoundingBox?> _boundingBoxCache = [];
 
 	public override void Update(float deltaTime)
 	{
@@ -47,7 +43,9 @@ public class CullingScene(Shader shader, List<Model> models, float totalWidth, V
 		_totalCount = 0;
 
 		if (PostProcess != null && capture != null)
+		{
 			device.SetRenderTarget(capture);
+		}
 
 		foreach (var model in Models)
 		{
@@ -57,11 +55,14 @@ public class CullingScene(Shader shader, List<Model> models, float totalWidth, V
 				if (boundingBox.HasValue)
 				{
 					_totalCount++;
-					bool visible = frustum.Intersects(boundingBox.Value);
-					if (visible)
+					if (frustum.Intersects(boundingBox.Value))
+					{
 						model.Draw(Shader.Effect, camera);
+					}
 					else
+					{
 						_culledCount++;
+					}
 
 					BoundBox.Draw(device, boundingBox.Value, camera, Color.White);
 				}

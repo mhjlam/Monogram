@@ -11,7 +11,6 @@ public class Camera
 	private Vector3 position;
 	private Vector3 target;
 
-	private readonly float defaultAspect;
 	private Vector3 defaultPosition;
 	private Vector3 defaultTarget;
 
@@ -20,9 +19,7 @@ public class Camera
 	private float _orbitPitch = 0f;
 	private float _orbitDistance = 100f;
 
-	public float OrbitYaw => _orbitYaw;
-	public float OrbitPitch => _orbitPitch;
-	public float OrbitDistance => _orbitDistance;
+	private readonly float defaultAspect;
 
 	public Vector3 Position => position;
 	public Matrix ViewMatrix => view;

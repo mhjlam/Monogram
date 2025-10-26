@@ -8,6 +8,7 @@ public struct Vertex(Vector3 position, Color color, Vector3 normal) : IVertexTyp
 	public Vector3 Position = position;
 	public Vector3 Normal = normal;
 	public Color Color = color;
+	
 	public static readonly VertexElement[] VertexElements =
 	[
 		new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),

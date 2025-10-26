@@ -93,6 +93,7 @@ public class MultiLightShader : Shader
             new(-10f, 0f, 5f),
             new(0f, 10f, 5f)
         ];
+
         Vector3[] lightColors =
         [
             Color.Red.ToVector3(),

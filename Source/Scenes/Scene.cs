@@ -54,13 +54,17 @@ public class Scene(SceneID id, Shader shader, List<Model> models, Vector3? eye =
 	{
 		_elapsed += elapsed;
 		if (float.IsPositiveInfinity(_elapsed))
+		{
 			_elapsed = 0f;
+		}
 	}
 
 	public virtual void Draw(GraphicsDevice device, BoundingFrustum frustum, Camera camera, RenderTarget2D? capture)
 	{
 		if (PostProcess != null && capture != null)
+		{
 			device.SetRenderTarget(capture);
+		}
 
 		foreach (var model in Models)
 		{
@@ -68,11 +72,15 @@ public class Scene(SceneID id, Shader shader, List<Model> models, Vector3? eye =
 			{
 				BoundingSphere boundingSphere = new();
 				foreach (ModelMesh mesh in model.XnaModel.Meshes)
+				{
 					boundingSphere = BoundingSphere.CreateMerged(boundingSphere, mesh.BoundingSphere);
+				}
 
 				boundingSphere.Center = model.Position;
 				if (frustum.Intersects(boundingSphere))
+				{
 					model.Draw(Shader.Effect, camera);
+				}
 			}
 			else
 			{

@@ -10,12 +10,13 @@ public class Model
 	private Vector3 defaultScale, scale;
 	private Vector3 defaultRotation, rotation;
 	private Vector3 defaultPosition, position;
+
 	private readonly XnaModel? xnaModel;
 
 	// For custom geometry
-	protected VertexBuffer? vertexBuffer;
-	protected IndexBuffer? indexBuffer;
 	protected int primitiveCount;
+	protected IndexBuffer? indexBuffer;
+	protected VertexBuffer? vertexBuffer;
 
 	// Optional bounding check
 	public bool UseBoundingSphere { get; set; }

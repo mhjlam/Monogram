@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,16 +8,17 @@ namespace Monogram
 {
     public class SceneDropdown
     {
-        private readonly List<string> _sceneNames;
-        private readonly SpriteFont _font;
-        private readonly int _itemHeight;
-        private readonly int _width;
         private bool _expanded = false;
         private int _selectedIndex;
         private Rectangle _dropdownRect;
-        private Rectangle[] _itemRects;
 
-        public int SelectedIndex
+		private readonly int _width;
+		private readonly int _itemHeight;
+		private readonly Rectangle[] _itemRects;
+		private readonly SpriteFont _font;
+		private readonly List<string> _sceneNames;
+
+		public int SelectedIndex
         {
             get => _selectedIndex;
             set => _selectedIndex = value;
@@ -36,9 +36,7 @@ namespace Monogram
             _width = width;
             _selectedIndex = 0;
             _dropdownRect = new Rectangle(x, y, width, _itemHeight);
-            _itemRects = Enumerable.Range(0, _sceneNames.Count)
-                .Select(i => new Rectangle(x, y + _itemHeight * (i + 1), width, _itemHeight))
-                .ToArray();
+            _itemRects = [.. Enumerable.Range(0, _sceneNames.Count).Select(i => new Rectangle(x, y + _itemHeight * (i + 1), width, _itemHeight))];
         }
 
         public void Update(MouseState mouse, MouseState prevMouse)
@@ -71,7 +69,9 @@ namespace Monogram
                     if (_itemRects[i].Contains(mousePos) && mouseClicked)
                     {
                         if (i != _selectedIndex)
+                        {
                             _selectedIndex = i;
+                        }
                         _expanded = false;
                         return;
                     }
@@ -127,7 +127,7 @@ namespace Monogram
             if (_pixel == null || _pixel.GraphicsDevice.IsDisposed)
             {
                 _pixel = new Texture2D(spriteBatch.GraphicsDevice, 1, 1);
-                _pixel.SetData(new[] { Color.White });
+                _pixel.SetData([Color.White]);
             }
             spriteBatch.Draw(_pixel, rect, fill);
 

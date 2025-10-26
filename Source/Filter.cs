@@ -6,9 +6,9 @@ namespace Monogram;
 
 public class Filter
 {
-	protected GraphicsDevice device;
-	protected SpriteBatch spritebatch;
 	protected Effect effect;
+	protected SpriteBatch spritebatch;
+	protected GraphicsDevice device;
 
 	public Filter(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Effect postProcessEffect)
 	{

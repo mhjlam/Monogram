@@ -7,10 +7,11 @@ namespace Monogram;
 
 public class BoundBox(Game game, GraphicsDevice device, Camera camera, BoundingBox box, Color color) : DrawableGameComponent(game)
 {
-	private readonly GraphicsDevice _device = device;
-	private readonly Camera _camera = camera;
-	private readonly Color _color = color;
 	private BoundingBox _box = box;
+	
+	private readonly Color _color = color;
+	private readonly Camera _camera = camera;
+	private readonly GraphicsDevice _device = device;
 
 	// Static resources for drawing
 	private static BasicEffect? effect = null;

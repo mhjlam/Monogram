@@ -1,6 +1,9 @@
 # Monogram
 
-Real-Time 3D Model and Scene Renderer
+**Real-Time 3D Model and Scene Renderer**
+
+> Maurits Lam  
+> 2025
 
 <p align="center">
    <img src="media/monogram.gif" alt="Demo Animation" width="720"/>
